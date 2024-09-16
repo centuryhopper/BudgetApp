@@ -1,0 +1,40 @@
+@page "/parsed-claims"
+@using System.Security.Claims
+
+@attribute [Authorize(Roles = "Admin, Normal_User")]
+
+<h1>JWT Parsed Claims (just a test page and not meant for production use)</h1>
+
+@if (userClaims == null)
+{
+    <p>Loading claims...</p>
+}
+else
+{
+    <ul>
+        @foreach (var claim in userClaims)
+        {
+            <li>@claim.Type: <b>@claim.Value</b></li>
+        }
+    </ul>
+}
+
+
+@code {
+    private IEnumerable<Claim> userClaims;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await ((ApiAuthenticationStateProvider)AuthenticationStateProvider).GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            userClaims = user.Claims;
+        }
+        else
+        {
+            userClaims = Enumerable.Empty<Claim>();
+        }
+    }
+}

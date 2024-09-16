@@ -1,0 +1,137 @@
+@page "/login"
+@using Microsoft.AspNetCore.Components.Forms
+@inject IAccountService accountService
+@inject NavigationManager NavigationManager
+@inject IHttpClientFactory httpClientFactory
+@*
+<h3>Login</h3>
+<EditForm Model="@loginDTO" OnValidSubmit="@HandleSubmit" OnInvalidSubmit="@HandleErrors">
+<DataAnnotationsValidator />
+<ValidationSummary />
+<div class="form-group mt-3">
+<label for="email">Email</label>
+<InputText id="email" class="form-control" @bind-Value="loginDTO.Email" />
+<ValidationMessage For="@(() => loginDTO.Email)" />
+</div>
+<div class="form-group mt-3">
+<label for="password">Password</label>
+<div class="input-group" id="show_hide_password">
+<InputText id="password" class="form-control" @bind-Value="loginDTO.Password" type="@passwordType" />
+<div class="input-group-append">
+<div class="input-group-addon">
+<span class="input-group-text">
+<a @onclick="TogglePasswordVisibility" tabindex="0" style="color: black; cursor: pointer;"><i
+class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
+</span>
+</div>
+</div>
+</div>
+<ValidationMessage For="@(() => loginDTO.Password)" />
+</div>
+<div class="form-group form-check mt-1">
+<InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="loginDTO.RememberMe" />
+<label class="form-check-label" for="rememberMe">Remember me</label>
+</div>
+<button disabled="@Loading" class="btn btn-primary">Login</button>
+@if (Loading)
+{
+<span class="spinner-border spinner-border-sm"></span>
+}
+</EditForm>
+*@
+<div class="container-fluid">
+    <EditForm Model="@loginDTO" OnValidSubmit="HandleSubmit">
+        <div class="card">
+            <h4 class="card-header">Login</h4>
+            <div class="card-body">
+                <DataAnnotationsValidator />
+                <p class="form-group">
+                    <label for="email">Email</label>
+                    <InputText id="email" class="form-control" @bind-Value="loginDTO.Email" />
+                    <ValidationMessage For="@(() => loginDTO.Email)" />
+                </p>
+                <p class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-group" id="show_hide_password">
+                    <InputText id="password" class="form-control" @bind-Value="loginDTO.Password" type="@passwordType" />
+                        <div class="input-group-append">
+                            <div class="input-group-addon">
+                                <span class="input-group-text">
+                                    <a @onkeypress="TogglePasswordVisibility" @onkeypress:preventDefault="true" tabindex="0" style="color: black; cursor: pointer;">
+                                        <i class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <ValidationMessage For="@(() => loginDTO.Password)" />
+                </p>
+            </div>
+        </div>
+        <div class="m-3">
+            <p class="form-check m-3">
+                <input class="form-check-input" @bind="loginDTO.RememberMe" type="checkbox" id="flexCheckDefault">
+                <label class="form-check-label" for="flexCheckDefault">
+                    Remember Me
+                </label>
+            </p>
+            <p class="m-3">
+                <button disabled="@loading" class="btn btn-primary">
+                    @if (loading)
+                    {
+                        <span class="spinner-border spinner-border-sm mr-1"></span>
+                    }
+                    Login
+                </button>
+            </p>
+        </div>
+    </EditForm>
+</div>
+<div class="text-center">
+    <p>Don't have an account?
+        <a href="https://dotnetusermanagementsystem-production.up.railway.app/Account/Login" target="_blank"
+            rel="noopener noreferrer">
+            Register Here
+        </a>
+    </p>
+</div>
+<NotificationModal @ref="notificationModal" />
+@code {
+    private NotificationModal notificationModal = default!;
+    private LoginDTO loginDTO = new();
+    private bool isPasswordVisible = false;
+    private string passwordType => isPasswordVisible ? "text" : "password";
+    private string iconClass => isPasswordVisible ? "fa-eye" : "fa-eye-slash";
+    private bool loading = false;
+    private async Task TogglePasswordVisibility(KeyboardEventArgs e)
+    {
+        // Check if the pressed key is either "Space" or "Enter"
+        if (e.Key == " " || e.Key == "Enter")
+        {
+            // Toggle the password visibility
+            isPasswordVisible = !isPasswordVisible;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //await jsRuntime.InvokeVoidAsync("showHidePasswordField", "show_hide_password");
+        //HttpClient httpClient = httpClientFactory.CreateClient(Constants.HTTP_CLIENT);
+        //await httpClient.GetAsync("api/Account/nlog-test");
+    }
+    private async Task HandleSubmit()
+    {
+        // Handle login logic here
+        //Console.WriteLine("showing modal");
+        var response = await accountService.LoginAsync(loginDTO);
+        if (!response.Flag)
+        {
+            notificationModal.Show("Error", response.Message, ModalType.ERROR);
+            return;
+        }
+        NavigationManager.NavigateTo("parsed-claims", true);
+    }
+    private async Task HandleErrors()
+    {
+        Console.WriteLine("error!");
+    }
+}

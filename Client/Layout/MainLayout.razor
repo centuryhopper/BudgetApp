@@ -1,0 +1,70 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inherits LayoutComponentBase
+
+
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+    <div class="main">
+        <header id="fwc-header">
+            <div class="top-space"></div>
+            <div id="misc-div1" class="">
+                <label id="lblEnvironment" class="env-sty"></label>
+                <div id="title-text" class="page-title" style="font-size:1.1rem">
+                    <!-- title is too long for a 1.6 rem font size-->
+                    <div class="container-fluid">
+                        <a class="logo-placement" href=https://myfwc.com>
+                            <img src="images/budget_icon.png"
+                                alt="Florida Fish and Wildlife Conservation Commission Logo" class="logo-img" />
+                        </a>
+                        <span style="padding-left: 120px;">
+                            <!-- Change this value to change upper Page Header title-->
+                            Leo's
+                        </span>
+                        <br />
+                        <span style="padding-left: 120px;">
+                            <!-- Change this value to change lower Page Header title-->
+                            Personal Budget App
+                        </span>
+                    </div>
+                </div>
+                @* <div class="top-row px-4 auth">
+                    <LoginDisplay />
+                </div> *@
+            </div>
+            <br />
+        </header>
+        <div class="content px-4">
+            @Body
+        </div>
+        <footer id="fwc-footer">
+            <div class="version-foot-style">
+                All rights reserved<br />
+                &copy; @DateTime.Now.Year Leo Zhang 
+                <br />
+            </div>
+        </footer>
+    </div>
+</div>
+@code {
+    private bool isAuthenticated;
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await ((ApiAuthenticationStateProvider)AuthenticationStateProvider).GetAuthenticationStateAsync();
+        isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+    }
+    private async Task Logout()
+    {
+        // Implement your logout logic here
+        // For example, you might call a logout API and then navigate to the login page
+        await Task.Run(() =>
+        {
+            // Custom logout logic here
+        });
+        Navigation.NavigateTo("login", forceLoad: true);
+    }
+}

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+cd ./Server
+if [ -d "./wwwroot" ]; then
+  rm -rf ./wwwroot
+else
+  echo "already removed wwwroot/ from the Server directory"
+fi
+
+if [ -d "./Models" ]; then
+  rm -rf ./Models
+else
+  echo "already removed Models/ from the Server directory"
+fi
+
+/usr/bin/dotnet watch run

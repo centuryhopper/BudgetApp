@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# reset server wwwroot
+rm -rf ./Server/wwwroot/*
+rmdir ./Server/wwwroot/
+mkdir ./Server/wwwroot/
+
+# publish and copy over published contents to server
+cd ./Client/
+/usr/bin/dotnet publish -o output
+cp -r ./output/wwwroot/* ../Server/wwwroot/
+rm -rf ./output/*
+rmdir ./output/
+
+# copy shared models over to server
+cd ../Server/
+rm -rf ./Models/
+mkdir ./Models
+cp -rf ../Shared/Models/* ./Models/
+
+# Check if an argument was provided, otherwise use a default value
+arg=${1:-"update"}
+
+# Echo the argument or default value
+git add .
+git commit -m "$arg"
+git push
+

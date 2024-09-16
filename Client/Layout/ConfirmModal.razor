@@ -1,0 +1,50 @@
+@code {
+    private bool isVisible = false;
+    private TaskCompletionSource<bool>? taskCompletionSource;
+
+    [Parameter] public string Title { get; set; } = "Confirmation";
+    [Parameter] public string BodyText { get; set; } = "Are you sure?";
+
+    public Task<bool> ShowAsync()
+    {
+        isVisible = true;
+        taskCompletionSource = new TaskCompletionSource<bool>();
+        StateHasChanged();
+        return taskCompletionSource.Task;
+    }
+
+    private void Confirm()
+    {
+        isVisible = false;
+        taskCompletionSource?.SetResult(true);
+        StateHasChanged();
+    }
+
+    private void Cancel()
+    {
+        isVisible = false;
+        taskCompletionSource?.SetResult(false);
+        StateHasChanged();
+    }
+}
+
+@if (isVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="display: block; background: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Title</h5>
+                <button type="button" class="btn-close" @onclick="Cancel"></button>
+            </div>
+            <div class="modal-body">
+                <p>@BodyText</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick="Confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+}

@@ -1,0 +1,21 @@
+@inject IAccountService accountService
+@inject NavigationManager NavigationManager
+
+<AuthorizeView>
+    <Authorized>
+        <a href="#">Hi @context.User.Identity?.Name!</a>
+        <button type="button" class="nav-link btn btn-link" @onclick="Logout">Log Out</button>
+    </Authorized>
+    <NotAuthorized>
+        <a href="login">Log In</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private async Task Logout()
+    {
+        await localStorageService.ClearAsync();
+        await accountService.LogoutAsync();
+        NavigationManager.NavigateTo("", true);
+    }
+}

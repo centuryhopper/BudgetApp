@@ -1,0 +1,52 @@
+
+<div class="modal fade @(isVisible ? "show d-block" : "")" tabindex="-1" style="background: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@Title</h5>
+                <button type="button" class="btn-close" @onclick="Hide"></button>
+            </div>
+            <div class="modal-body">
+                <p class="@modalClass">@BodyText</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="Hide">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool isVisible = false;
+    private string modalClass = string.Empty;
+
+    private string Title { get; set; } = "Notification";
+    private string BodyText { get; set; } = "Message";
+
+    public void Show(string title, string message, ModalType type)
+    {
+        Title = title;
+        BodyText = message;
+        SetModalClass(type);
+        isVisible = true;
+        StateHasChanged();
+    }
+
+    private void Hide()
+    {
+        isVisible = false;
+        StateHasChanged();
+    }
+
+    private void SetModalClass(ModalType modalType)
+    {
+        modalClass = modalType switch
+        {
+            ModalType.SUCCESS => "text-success",
+            ModalType.WARNING => "text-warning",
+            ModalType.ERROR => "text-danger",
+            ModalType.INFO => "text-info",
+            _ => ""
+        };
+    }
+}
