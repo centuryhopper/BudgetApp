@@ -10,9 +10,13 @@ using NpgsqlTypes;
 using Server.Contexts;
 using Server.Entities;
 using Server.Repositories;
+using Shared.Models;
 using Swashbuckle.AspNetCore.Filters;
 
 // MUST HAVE IT LIKE THIS FOR NLOG TO RECOGNIZE DOTNET USER-SECRETS INSTEAD OF HARDCODED DELIMIT PLACEHOLDER VALUE FROM APPSETTINGS.JSON
+
+// the backend will parse chase bank csv files and store info in database
+// the frontend will give users a way to upload csv files
 
 // #if DEBUG
 //     var logger = LogManager.Setup().LoadConfigurationFromFile("nlog_dev.config").GetCurrentClassLogger();
@@ -31,7 +35,7 @@ using Swashbuckle.AspNetCore.Filters;
     // builder.Host.UseNLog();
 
 
-    builder.Services.AddControllers();
+    // builder.Services.AddControllers();
     builder.Services.AddRazorPages();
     builder.Services.AddHttpClient();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -47,6 +51,9 @@ using Swashbuckle.AspNetCore.Filters;
     });
 
     builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+    builder.Services.AddScoped<ITransactionsRepository<ChaseTransactionsDTO>, TransactionsRepository>();
+
+    // TODO: create db for transactions
 
     // Configure the Identity database context
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -122,7 +129,8 @@ using Swashbuckle.AspNetCore.Filters;
     app.UseAuthorization();
 
     app.MapRazorPages();
-    app.MapControllers();
+    // app.MapControllers();
+    app.MapAccountEndpoints();
     app.MapFallbackToFile("index.html");
 
 
