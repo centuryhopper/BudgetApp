@@ -7,7 +7,7 @@ namespace Shared.Models;
 public class ChaseTransactionsDTO
 {
     public int Transactionsid { get; set; }
-    public int? Accountid { get; set; }
+    public int? Userid { get; set; }
     public string Details { get; set; }
 
     public DateOnly? PostingDate { get; set; }

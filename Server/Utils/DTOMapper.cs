@@ -13,6 +13,7 @@ public static class DTOMapper
         return new()
         {
             Transactionsid = transaction.Transactionsid,
+            Userid = transaction.Userid,
             Details = transaction.Details,
             PostingDate = transaction.Postingdate,
             Description = transaction.Description,
@@ -28,6 +29,7 @@ public static class DTOMapper
         return new()
         {
             Transactionsid = dto.Transactionsid,
+            Userid = dto.Userid,
             Details = dto.Details,
             Postingdate = dto.PostingDate,
             Description = dto.Description,

@@ -46,6 +46,12 @@ public partial class BudgetDBContext : DbContext
             entity.Property(e => e.Type)
                 .HasMaxLength(64)
                 .HasColumnName("type");
+            entity.Property(e => e.Userid).HasColumnName("userid");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Transactions)
+                .HasForeignKey(d => d.Userid)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("transactions_userid_fkey");
         });
 
         modelBuilder.Entity<User>(entity =>

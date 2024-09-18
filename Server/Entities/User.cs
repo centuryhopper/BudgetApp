@@ -22,4 +22,6 @@ public partial class User
     public DateTime? Datecreated { get; set; }
 
     public DateTime? Dateretired { get; set; }
+
+    public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

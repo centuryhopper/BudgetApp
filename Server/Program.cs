@@ -16,7 +16,7 @@ using Swashbuckle.AspNetCore.Filters;
 
 // MUST HAVE IT LIKE THIS FOR NLOG TO RECOGNIZE DOTNET USER-SECRETS INSTEAD OF HARDCODED DELIMIT PLACEHOLDER VALUE FROM APPSETTINGS.JSON
 
-//     dotnet ef dbcontext scaffold "Name=ConnectionStrings:BudgetDB" Npgsql.EntityFrameworkCore.PostgreSQL -t transactions -t account -t users -o Entities -c BudgetDBContext --context-dir Contexts -f
+//     dotnet ef dbcontext scaffold "Name=ConnectionStrings:BudgetDB" Npgsql.EntityFrameworkCore.PostgreSQL -t transactions -t users -o Entities -c BudgetDBContext --context-dir Contexts -f
 
 
 // the backend will parse chase bank csv files and store info in database
@@ -62,7 +62,7 @@ using Swashbuckle.AspNetCore.Filters;
     
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(
-            configProvider.GetConfigurationValue(configKey: "ConnectionStrings:UserManagementDB",environmentVariableName: "UserManagementDB" )
+            configProvider.GetUserManagementConnectionString
         )
     );
 
@@ -70,8 +70,7 @@ using Swashbuckle.AspNetCore.Filters;
     builder.Services.AddDbContext<BudgetDBContext>(options =>
     {
         options.UseNpgsql(
-            configProvider.GetConfigurationValue(configKey: "ConnectionStrings:BudgetDB",
-            environmentVariableName: "BudgetDB")
+            configProvider.GetBudgetDBConnectionString
         ).EnableSensitiveDataLogging();
     });
 
@@ -97,9 +96,9 @@ using Swashbuckle.AspNetCore.Filters;
             ValidateAudience = true,
             ValidateIssuerSigningKey = true,
             ValidateLifetime = true,
-            ValidIssuer = builder.Environment.IsDevelopment() ? builder.Configuration["Jwt:Issuer"] : Environment.GetEnvironmentVariable("Jwt_Issuer"),
-            ValidAudience = builder.Environment.IsDevelopment() ? builder.Configuration["Jwt:Audience"] : Environment.GetEnvironmentVariable("Jwt_Audience"),
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Environment.IsDevelopment() ? builder.Configuration["Jwt:Key"] : Environment.GetEnvironmentVariable("Jwt_Key")))
+            ValidIssuer = configProvider.JwtIssuer,
+            ValidAudience = configProvider.JwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configProvider.JwtKey))
         };
     });
 

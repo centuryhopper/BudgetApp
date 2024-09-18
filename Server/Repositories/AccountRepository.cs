@@ -69,7 +69,7 @@ public class AccountRepository(UserManager<ApplicationUser> userManager, RoleMan
     private string GenerateToken(int userId, string userName, string email, string role)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            configurationProvider.GetConfigurationValue(configKey: "Jwt:Key", environmentVariableName: "Jwt_Key" )
+            configurationProvider.JwtKey
         ));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
         var userClaims = new[]
@@ -81,8 +81,8 @@ public class AccountRepository(UserManager<ApplicationUser> userManager, RoleMan
         };
 
         var token = new JwtSecurityToken(
-            issuer: configurationProvider.GetConfigurationValue(configKey: "Jwt:Issuer", environmentVariableName: "Jwt_Issuer" ),
-            audience: configurationProvider.GetConfigurationValue(configKey: "Jwt:Audience", environmentVariableName: "Jwt_Audience"),
+            issuer: configurationProvider.JwtIssuer,
+            audience: configurationProvider.JwtAudience,
             claims: userClaims,
             expires: DateTime.Now.AddDays(1),
             signingCredentials: credentials

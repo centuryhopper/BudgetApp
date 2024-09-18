@@ -7,6 +7,8 @@ public partial class Transaction
 {
     public int Transactionsid { get; set; }
 
+    public int? Userid { get; set; }
+
     public string? Details { get; set; }
 
     public DateOnly? Postingdate { get; set; }
@@ -20,4 +22,6 @@ public partial class Transaction
     public decimal? Balance { get; set; }
 
     public int? Checkorslip { get; set; }
+
+    public virtual User? User { get; set; }
 }
