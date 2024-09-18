@@ -12,7 +12,7 @@ using static Shared.Models.ServiceResponses;
 
 namespace Server.Repositories;
 
-public class AccountRepository(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, IConfiguration configuration, IWebHostEnvironment webHostEnvironment) : IAccountRepository
+public class AccountRepository(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, IConfiguration configuration, BudgetDBContext budgetDBContext, ConfigurationProvider configurationProvider) : IAccountRepository
 {
     public async Task<LoginResponse> LoginAccount(LoginDTO loginDTO)
     {
@@ -35,37 +35,42 @@ public class AccountRepository(UserManager<ApplicationUser> userManager, RoleMan
 
         // your custom new user insert goes here (below is just an example)
 
-        // add user to stock user table if they arent in it already
-        // if (await stockDataDbContext.Stockusers.FirstOrDefaultAsync(u => u.UmsUserid == getUser.Id) is null)
-        // {
-        //     try
-        //     {
-                // await stockDataDbContext.Stockusers.AddAsync(new Stockuser {
-                //     UmsUserid = getUser.Id!
-                //     ,Email = getUser.Email!
-                //     ,DateCreated = DateTime.Now
-                //     ,DateLastLogin = DateTime.Now
-                //     ,DateRetired = null
-                // });
-                // await stockDataDbContext.SaveChangesAsync();
-        //     }
-        //     catch (System.Exception ex)
-        //     {
-        //         return new LoginResponse(false, null!, ex.Message);
-        //     }
-        // }
+        // add user to budget user table if they arent in it already
+        if (await budgetDBContext.Users.FirstOrDefaultAsync(u => u.UmsUserid == getUser.Id) is null)
+        {
+            try
+            {
+                await budgetDBContext.Users.AddAsync(new User {
+                    UmsUserid = getUser.Id!
+                    ,Email = getUser.Email!,
+                    Firstname = "test_firstname",
+                    Lastname = "test_lastname"
+                    ,Datecreated = DateTime.Now
+                    ,Datelastlogin = DateTime.Now
+                    ,Dateretired = null
+                    ,Datelastlogout = null,
+                });
+                await budgetDBContext.SaveChangesAsync();
+            }
+            catch (System.Exception ex)
+            {
+                return new LoginResponse(false, null!, ex.Message);
+            }
+        }
 
-        // var stockUser = await stockDataDbContext.Stockusers.FirstOrDefaultAsync(u=>u.UmsUserid == getUser.Id);
+        var budgetUser = await budgetDBContext.Users.FirstOrDefaultAsync(u=>u.UmsUserid == getUser.Id);
 
         var getUserRole = await userManager.GetRolesAsync(getUser);
-        string token = GenerateToken(0/*just a dummy id value for demo*/, getUser.UserName, getUser.Email, getUserRole.First());
+        string token = GenerateToken(budgetUser.Id, getUser.UserName, getUser.Email, getUserRole.First());
 
         return new LoginResponse(true, token!, "Login completed");
     }
 
     private string GenerateToken(int userId, string userName, string email, string role)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(webHostEnvironment.IsDevelopment() ? configuration["Jwt:Key"] : Environment.GetEnvironmentVariable("JWT_Key")));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            configurationProvider.GetConfigurationValue(configKey: "Jwt:Key", environmentVariableName: "JWT_Key" )
+        ));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
         var userClaims = new[]
         {
@@ -76,8 +81,8 @@ public class AccountRepository(UserManager<ApplicationUser> userManager, RoleMan
         };
 
         var token = new JwtSecurityToken(
-            issuer: webHostEnvironment.IsDevelopment() ? configuration["Jwt:Issuer"] : Environment.GetEnvironmentVariable("Jwt_Issuer"),
-            audience: webHostEnvironment.IsDevelopment() ? configuration["Jwt:Audience"] : Environment.GetEnvironmentVariable("Jwt_Audience"),
+            issuer: configurationProvider.GetConfigurationValue(configKey: "Jwt:Issuer", environmentVariableName: "Jwt_Issuer" ),
+            audience: configurationProvider.GetConfigurationValue(configKey: "Jwt:Audience", environmentVariableName: "Jwt_Audience"),
             claims: userClaims,
             expires: DateTime.Now.AddDays(1),
             signingCredentials: credentials

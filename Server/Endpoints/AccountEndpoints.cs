@@ -1,6 +1,7 @@
 
 
 
+using Microsoft.AspNetCore.Mvc;
 using Shared.Models;
 using static Shared.Models.ServiceResponses;
 
@@ -17,7 +18,7 @@ public static class AccountEndpoints
            .Produces<LoginResponse>(StatusCodes.Status200OK);
     }
 
-    private static IResult TestLogging(ILogger logger)
+    private static IResult TestLogging([FromServices] ILogger<string> logger)
     {
         logger.LogWarning("warning!");
         logger.LogInformation("information!");

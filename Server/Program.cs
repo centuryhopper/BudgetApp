@@ -1,3 +1,4 @@
+global using ConfigurationProvider = Server.Utils.ConfigurationProvider;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -14,6 +15,9 @@ using Shared.Models;
 using Swashbuckle.AspNetCore.Filters;
 
 // MUST HAVE IT LIKE THIS FOR NLOG TO RECOGNIZE DOTNET USER-SECRETS INSTEAD OF HARDCODED DELIMIT PLACEHOLDER VALUE FROM APPSETTINGS.JSON
+
+//     dotnet ef dbcontext scaffold "Name=ConnectionStrings:BudgetDB" Npgsql.EntityFrameworkCore.PostgreSQL -t transactions -t account -t users -o Entities -c BudgetDBContext --context-dir Contexts -f
+
 
 // the backend will parse chase bank csv files and store info in database
 // the frontend will give users a way to upload csv files
@@ -52,29 +56,24 @@ using Swashbuckle.AspNetCore.Filters;
 
     builder.Services.AddScoped<IAccountRepository, AccountRepository>();
     builder.Services.AddScoped<ITransactionsRepository<ChaseTransactionsDTO>, TransactionsRepository>();
+    builder.Services.AddSingleton<ConfigurationProvider>();
 
-    // TODO: create db for transactions
-
-    // Configure the Identity database context
+    var configProvider = builder.Services.BuildServiceProvider().GetRequiredService<ConfigurationProvider>();
+    
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(
-            builder.Environment.IsDevelopment()
-                    ?
-                        builder.Configuration.GetConnectionString("UserManagementDB")
-                    :
-                        Environment.GetEnvironmentVariable("UserManagementDB"))
-            );
+            configProvider.GetConfigurationValue(configKey: "ConnectionStrings:UserManagementDB",environmentVariableName: "UserManagementDB" )
+        )
+    );
 
     // add your custom db contexts here
-    // builder.Services.AddDbContext<StockDataDbContext>(options =>
-    // {
-    //     options.UseNpgsql(builder.Environment.IsDevelopment()
-    //                 ?
-    //                     builder.Configuration.GetConnectionString("StockDataDB")
-    //                 :
-    //                     Environment.GetEnvironmentVariable("StockDataDB")
-    //                 ).EnableSensitiveDataLogging();
-    // });
+    builder.Services.AddDbContext<BudgetDBContext>(options =>
+    {
+        options.UseNpgsql(
+            configProvider.GetConfigurationValue(configKey: "ConnectionStrings:BudgetDB",
+            environmentVariableName: "BudgetDB")
+        ).EnableSensitiveDataLogging();
+    });
 
     builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -124,6 +123,8 @@ using Swashbuckle.AspNetCore.Filters;
     app.UseBlazorFrameworkFiles();
     app.UseStaticFiles();
     app.UseRouting();
+    // app.UseAntiforgery();
+
 
     app.UseAuthentication();
     app.UseAuthorization();
@@ -131,6 +132,7 @@ using Swashbuckle.AspNetCore.Filters;
     app.MapRazorPages();
     // app.MapControllers();
     app.MapAccountEndpoints();
+    app.MapTransactionsEndpoints();
     app.MapFallbackToFile("index.html");
 
 
