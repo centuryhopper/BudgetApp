@@ -39,7 +39,7 @@ using Swashbuckle.AspNetCore.Filters;
     // builder.Host.UseNLog();
 
 
-    // builder.Services.AddControllers(); 
+    // builder.Services.AddControllers();  
     builder.Services.AddRazorPages();
     builder.Services.AddHttpClient();
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
