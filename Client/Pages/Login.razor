@@ -57,7 +57,9 @@ class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
                         <div class="input-group-append">
                             <div class="input-group-addon">
                                 <span class="input-group-text">
-                                    <a @onkeypress="TogglePasswordVisibility" @onkeypress:preventDefault="true" tabindex="0" style="color: black; cursor: pointer;">
+                                    <a 
+                                    @onclick="@((m)=> TogglePasswordVisibility(m))"
+                                    @onkeypress="TogglePasswordVisibility" @onkeypress:preventDefault="true" tabindex="0" style="color: black; cursor: pointer;">
                                         <i class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
                                 </span>
                             </div>
@@ -102,14 +104,25 @@ class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
     private string passwordType => isPasswordVisible ? "text" : "password";
     private string iconClass => isPasswordVisible ? "fa-eye" : "fa-eye-slash";
     private bool loading = false;
-    private async Task TogglePasswordVisibility(KeyboardEventArgs e)
+
+    private void TogglePasswordVisibility(MouseEventArgs mouseEventArgs)
+    {
+        if (mouseEventArgs != null)
+        {
+            isPasswordVisible = !isPasswordVisible;
+        }
+    }
+
+    private void TogglePasswordVisibility(KeyboardEventArgs keyboardEventArgs)
     {
         // Check if the pressed key is either "Space" or "Enter"
-        if (e.Key == " " || e.Key == "Enter")
+        if (keyboardEventArgs.Key == " " || keyboardEventArgs.Key == "Enter")
         {
             // Toggle the password visibility
             isPasswordVisible = !isPasswordVisible;
         }
+
+        
     }
 
     protected override async Task OnInitializedAsync()

@@ -1,0 +1,29 @@
+@page "/transactions"
+
+
+@* TODO: show monthly transactions in the current year  *@
+
+<h3>Monthly Expenses Chart</h3>
+<canvas id="transactionsBarChart" width="400" height="200"></canvas>
+
+@code {
+
+    private HttpClient httpClient {get;set;}
+
+    List<decimal> chaseTransactionsInCurrentyear {get;set;} = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient = httpClientFactory.CreateClient(Constants.HTTP_CLIENT);
+        chaseTransactionsInCurrentyear = (await httpClient.GetFromJsonAsync<IEnumerable<decimal>>("api/transactions/get-transactions-currentyear")).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (chaseTransactionsInCurrentyear.Any())
+        {
+            //Console.WriteLine(chaseTransactionsInCurrentyear.Count);
+            await jsRuntime.InvokeVoidAsync("chartJsInterop.initializeChart", "transactionsBarChart", chaseTransactionsInCurrentyear);
+        }
+    }
+}

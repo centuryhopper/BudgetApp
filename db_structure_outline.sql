@@ -19,16 +19,10 @@ CREATE TABLE IF NOT EXISTS Users (
     DateRetired TIMESTAMP
 );
 
--- Create Account table
-CREATE TABLE IF NOT EXISTS Account (
-    AccountId SERIAL PRIMARY KEY,
-    UserId INT REFERENCES Users(ID) ON DELETE CASCADE,  -- Ensure UserId is INT and use ON DELETE CASCADE for cleanup
-    AccountType VARCHAR(15) NOT NULL  -- AccountType should be NOT NULL
-);
-
 -- Create Transactions table
 CREATE TABLE IF NOT EXISTS Transactions (
     TransactionsId SERIAL PRIMARY KEY,
+    UserId INT REFERENCES Users(ID) ON DELETE CASCADE,  -- Ensure UserId is INT and use ON DELETE CASCADE for cleanup
     Details VARCHAR(15),
     PostingDate DATE,
     Description VARCHAR(256),
@@ -37,3 +31,5 @@ CREATE TABLE IF NOT EXISTS Transactions (
     Balance DECIMAL(10, 2),  -- Specify precision for Balance
     CheckOrSlip INT
 );
+
+

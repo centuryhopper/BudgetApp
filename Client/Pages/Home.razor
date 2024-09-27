@@ -1,7 +1,97 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Net.Http.Headers
 
 <PageTitle>Home</PageTitle>
 
 <h1>Hello there!</h1>
 
-Thanks for using the Blazor Template With JWT Auth app.
+Thanks for using Leo's Budgeting app.
+
+<AuthorizeView>
+    <Authorized>
+        Upload your Chase Transactions CSV below to view your running totals in the Transactions tab.
+        <div class="m-3 p-3" style="overflow-y: scroll; height: 30rem;">
+            <InputFile OnChange="HandleFileSelected" />
+            <br>
+            <button disabled="@loading" @onclick="SubmitFile" class="btn btn-primary mt-3">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm mr-1"></span>
+                }
+                Submit
+            </button>
+            <p>@message</p>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        Please log in to get started.
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+    private IBrowserFile selectedFile;
+    private string message = string.Empty;
+    private HttpClient httpClient;
+    private bool loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient = httpClientFactory.CreateClient(Constants.HTTP_CLIENT);
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedFile = e.File;
+
+        if (selectedFile == null || selectedFile.Size == 0)
+        {
+            message = "No file selected or file is empty.";
+        }
+        else
+        {
+            message = $"File selected: {selectedFile.Name}";
+        }
+    }
+
+    private async Task SubmitFile()
+    {
+        if (selectedFile == null || selectedFile.Size == 0)
+        {
+            message = "No file selected or file is empty.";
+            return;
+        }
+
+        loading = true;
+
+        try
+        {
+            var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(selectedFile.OpenReadStream(selectedFile.Size));
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            content.Add(fileContent, "file", selectedFile.Name);
+
+            var response = await httpClient.PostAsync("/api/transactions/post-data", content);
+
+            var msg = await response.Content.ReadFromJsonAsync<GeneralResponse>();
+
+            if (response.IsSuccessStatusCode)
+            {
+                message = "File uploaded successfully!\n" + msg?.Message;
+            }
+            else
+            {
+                message = $"Error: {msg?.Message ?? response.ReasonPhrase}";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Exception: {ex.Message}";
+        }
+        finally {
+            loading = false;
+        }
+
+    }
+}
