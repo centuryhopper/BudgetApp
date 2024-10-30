@@ -36,7 +36,6 @@ public class TransactionsRepository(BudgetDBContext BudgetDBContext) : ITransact
                 throw new Exception("transaction already exists for: " + transaction.Description);
             }
 
-            
             await BudgetDBContext.Transactions.AddAsync(dto.ToTransactions());
             await BudgetDBContext.SaveChangesAsync();
         }
