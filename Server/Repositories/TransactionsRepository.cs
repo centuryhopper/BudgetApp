@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using Server.Contexts;
 using Server.Utils;
@@ -64,6 +63,27 @@ public class TransactionsRepository(BudgetDBContext BudgetDBContext) : ITransact
         t.Postingdate.GetValueOrDefault().Month == DateTime.Now.Month
         );
         return await query.Select(t=>t.ToChaseTransactionsDTO()).ToListAsync();
+    }
+
+    public async Task<IEnumerable<decimal>> GetTransactionsByYear(IEnumerable<string> keywords, int year)
+    {
+        var query = BudgetDBContext.Transactions.AsQueryable();
+        query = query.Where(t =>
+            keywords.Any(keyword => t.Description.ToLower().Contains(keyword.ToLower()))
+            && 
+            t.Postingdate.HasValue && t.Postingdate.Value.Year == year
+        );
+
+        List<decimal> data = Enumerable.Repeat(0m, 12).ToList();
+        var groups = query.GroupBy(t => new {t.Postingdate.Value.Month}).ToArray();
+
+        foreach (var group in groups)
+        {
+            //group.ToList().ForEach(t => System.Console.WriteLine(Math.Abs(t.Amount.Value)));
+            data[group.Key.Month - 1] = group.Sum(t => Math.Abs(t.Amount.Value));
+        }
+
+        return data;
     }
 
     public async Task<IEnumerable<decimal>> GetTransactionsInCurrentYear(IEnumerable<string> keywords)

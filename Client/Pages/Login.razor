@@ -3,42 +3,8 @@
 @inject IAccountService accountService
 @inject NavigationManager NavigationManager
 @inject IHttpClientFactory httpClientFactory
-@*
-<h3>Login</h3>
-<EditForm Model="@loginDTO" OnValidSubmit="@HandleSubmit" OnInvalidSubmit="@HandleErrors">
-<DataAnnotationsValidator />
-<ValidationSummary />
-<div class="form-group mt-3">
-<label for="email">Email</label>
-<InputText id="email" class="form-control" @bind-Value="loginDTO.Email" />
-<ValidationMessage For="@(() => loginDTO.Email)" />
-</div>
-<div class="form-group mt-3">
-<label for="password">Password</label>
-<div class="input-group" id="show_hide_password">
-<InputText id="password" class="form-control" @bind-Value="loginDTO.Password" type="@passwordType" />
-<div class="input-group-append">
-<div class="input-group-addon">
-<span class="input-group-text">
-<a @onclick="TogglePasswordVisibility" tabindex="0" style="color: black; cursor: pointer;"><i
-class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
-</span>
-</div>
-</div>
-</div>
-<ValidationMessage For="@(() => loginDTO.Password)" />
-</div>
-<div class="form-group form-check mt-1">
-<InputCheckbox id="rememberMe" class="form-check-input" @bind-Value="loginDTO.RememberMe" />
-<label class="form-check-label" for="rememberMe">Remember me</label>
-</div>
-<button disabled="@Loading" class="btn btn-primary">Login</button>
-@if (Loading)
-{
-<span class="spinner-border spinner-border-sm"></span>
-}
-</EditForm>
-*@
+
+
 <div class="container-fluid">
     <EditForm Model="@loginDTO" OnValidSubmit="HandleSubmit">
         <div class="card">
@@ -58,8 +24,7 @@ class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
                             <div class="input-group-addon">
                                 <span class="input-group-text">
                                     <a 
-                                    @onclick="@((m)=> TogglePasswordVisibility(m))"
-                                    @onkeypress="TogglePasswordVisibility" @onkeypress:preventDefault="true" tabindex="0" style="color: black; cursor: pointer;">
+                                    @onclick="@((m)=> TogglePasswordVisibility(m))"@onkeypress="TogglePasswordVisibility" @onkeypress:preventDefault="true" tabindex="0" style="color: black; cursor: pointer;">
                                         <i class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
                                 </span>
                             </div>
@@ -84,6 +49,12 @@ class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
                     }
                     Login
                 </button>
+                @if (!string.IsNullOrWhiteSpace(errMsg))
+                {
+                    <p class="text-danger m-3">
+                        @errMsg
+                    </p>
+                }
             </p>
         </div>
     </EditForm>
@@ -96,14 +67,25 @@ class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
         </a>
     </p>
 </div>
+
 <NotificationModal @ref="notificationModal" />
+<CooldownTimer @ref="cooldownTimer" CooldownTime="30" MaxAttempts="5" OnCooldownComplete="OnCooldownComplete" />
+
 @code {
     private NotificationModal notificationModal = default!;
+    private CooldownTimer cooldownTimer = default!;
     private LoginDTO loginDTO = new();
     private bool isPasswordVisible = false;
     private string passwordType => isPasswordVisible ? "text" : "password";
     private string iconClass => isPasswordVisible ? "fa-eye" : "fa-eye-slash";
     private bool loading = false;
+
+    private string errMsg = "";
+
+    private void OnCooldownComplete()
+    {
+        StateHasChanged();
+    }
 
     private void TogglePasswordVisibility(MouseEventArgs mouseEventArgs)
     {
@@ -113,34 +95,50 @@ class="fa @iconClass field-icon m-1" aria-hidden="true"></i></a>
         }
     }
 
-    private void TogglePasswordVisibility(KeyboardEventArgs keyboardEventArgs)
+    private async Task TogglePasswordVisibility(KeyboardEventArgs e)
     {
         // Check if the pressed key is either "Space" or "Enter"
-        if (keyboardEventArgs.Key == " " || keyboardEventArgs.Key == "Enter")
+        if (e.Key == " " || e.Key == "Enter")
         {
             // Toggle the password visibility
             isPasswordVisible = !isPasswordVisible;
         }
-
-        
     }
 
     protected override async Task OnInitializedAsync()
     {
-        //await jsRuntime.InvokeVoidAsync("showHidePasswordField", "show_hide_password");
-        //HttpClient httpClient = httpClientFactory.CreateClient(Constants.HTTP_CLIENT);
-        //await httpClient.GetAsync("api/Account/nlog-test");
+        // await jsRuntime.InvokeVoidAsync("showHidePasswordField", "show_hide_password");
+        // HttpClient httpClient = httpClientFactory.CreateClient(Constants.HTTP_CLIENT);
+        // await httpClient.GetAsync("api/Account/nlog-test");
     }
+
     private async Task HandleSubmit()
     {
+        if (cooldownTimer.IsCoolingDown)
+        {
+            errMsg = "";
+            return;
+        }
+
+        loading = true;
+        errMsg = ""; // Clear any previous error messages
+
         // Handle login logic here
         //Console.WriteLine("showing modal");
         var response = await accountService.LoginAsync(loginDTO);
+        loading = false;
         if (!response.Flag)
         {
-            notificationModal.Show("Error", response.Message, ModalType.ERROR);
+            cooldownTimer.IncrementSubmissionCount();
+            //notificationModal.Show("Error", response.Message, ModalType.ERROR);
+            //Console.WriteLine(response.Message);
+            if (!cooldownTimer.IsCoolingDown)
+            {
+                errMsg = response.Message;
+            }
             return;
         }
+        cooldownTimer.ResetSubmissionCount();
         NavigationManager.NavigateTo("parsed-claims", true);
     }
     private async Task HandleErrors()

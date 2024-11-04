@@ -1,0 +1,78 @@
+@using System.Timers
+
+@if (isCoolingDown)
+{
+    <p class="text-bg-warning" style="font-size: medium;">Please wait @remainingSeconds seconds before trying again.</p>
+}
+
+@code {
+    [Parameter]
+    public int CooldownTime { get; set; } = 30; // Default cooldown time in seconds
+
+    [Parameter]
+    public int MaxAttempts { get; set; } = 5; // Maximum attempts before cooldown
+
+    [Parameter]
+    public EventCallback OnCooldownComplete { get; set; }
+
+    private Timer coolDownTimer = null!;
+    private int remainingSeconds;
+    private bool isCoolingDown;
+    private int submissionCount;
+
+    public void IncrementSubmissionCount()
+    {
+        submissionCount++;
+
+        Console.WriteLine(submissionCount);
+
+        if (submissionCount >= MaxAttempts)
+        {
+            StartCooldown();
+        }
+    }
+
+    public void ResetSubmissionCount()
+    {
+        submissionCount = 0;
+    }
+
+    private void StartCooldown()
+    {
+        if (isCoolingDown) return;
+
+        isCoolingDown = true;
+        remainingSeconds = CooldownTime;
+        coolDownTimer = new Timer(1000); // 1-second interval
+        coolDownTimer.Elapsed += OnCooldownElapsed!;
+        coolDownTimer.Start();
+    }
+
+    private void OnCooldownElapsed(object sender, ElapsedEventArgs e)
+    {
+        remainingSeconds--;
+
+        if (remainingSeconds <= 0)
+        {
+            StopCooldown();
+            OnCooldownComplete.InvokeAsync();
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void StopCooldown()
+    {
+        coolDownTimer?.Stop();
+        coolDownTimer?.Dispose();
+        isCoolingDown = false;
+        ResetSubmissionCount(); // Reset count after cooldown ends
+    }
+
+    public void Dispose()
+    {
+        StopCooldown();
+    }
+
+    public bool IsCoolingDown => isCoolingDown;
+}

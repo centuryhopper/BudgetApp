@@ -1,0 +1,37 @@
+@page "/transactions-view/{Year:int}"
+
+@if (chaseTransactions.Any())
+{
+    <h3>Monthly Expenses Chart</h3>
+    <canvas id="transactionsBarChart" width="400" height="200"></canvas>
+}
+else
+{
+    <p>No data available for @Year</p>
+}
+
+
+@code {
+
+    private HttpClient httpClient {get;set;}
+
+    [Parameter]
+    public int Year {get;set;}
+
+    List<decimal> chaseTransactions {get;set;} = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        httpClient = httpClientFactory.CreateClient(Constants.HTTP_CLIENT);
+        chaseTransactions = (await httpClient.GetFromJsonAsync<IEnumerable<decimal>>("api/transactions/get-transactions-by-year?Year="+Year)).ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (chaseTransactions.Any())
+        {
+            // Console.WriteLine(chaseTransactionsInCurrentyear.Count);
+            await jsRuntime.InvokeVoidAsync("chartJsInterop.initializeChart", "transactionsBarChart", chaseTransactions);
+        }
+    }
+}

@@ -1,29 +1,33 @@
 @page "/transactions"
 
 
-@* TODO: show monthly transactions in the current year  *@
 
-<h3>Monthly Expenses Chart</h3>
-<canvas id="transactionsBarChart" width="400" height="200"></canvas>
+<h3>Transactions Overview</h3>
+
+<div class="card-container">
+    @foreach (var year in LastThreeYears)
+    {
+        <div class="card m-3 p-2" @onclick="() => NavigateToYearTransactions(year)">
+            <h4>@year Transactions</h4>
+            <p>Click to view transactions for @year</p>
+        </div>
+    }
+</div>
 
 @code {
+    private List<int> LastThreeYears { get; set; }
 
-    private HttpClient httpClient {get;set;}
-
-    List<decimal> chaseTransactionsInCurrentyear {get;set;} = [];
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        httpClient = httpClientFactory.CreateClient(Constants.HTTP_CLIENT);
-        chaseTransactionsInCurrentyear = (await httpClient.GetFromJsonAsync<IEnumerable<decimal>>("api/transactions/get-transactions-currentyear")).ToList();
+        // Get the current year and generate the last 3 years
+        var currentYear = DateTime.Now.Year;
+        LastThreeYears = Enumerable.Range(currentYear - 2, 3).Reverse().ToList();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private void NavigateToYearTransactions(int year)
     {
-        if (chaseTransactionsInCurrentyear.Any())
-        {
-            //Console.WriteLine(chaseTransactionsInCurrentyear.Count);
-            await jsRuntime.InvokeVoidAsync("chartJsInterop.initializeChart", "transactionsBarChart", chaseTransactionsInCurrentyear);
-        }
+        // Navigate to the page displaying transactions for the selected year
+        NavigationManager.NavigateTo($"transactions-view/{year}");
     }
+
 }

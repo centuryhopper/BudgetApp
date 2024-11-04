@@ -21,7 +21,11 @@ public static class TransactionsEndpoints
         .Produces<GeneralResponse>(StatusCodes.Status200OK);
 
         app.MapGet("/api/transactions/get-transactions-currentyear", GetTransactionsInCurrentYear)
-        .WithName("get transactions")
+        .WithName("get transactions in current year")
+        .Produces<IEnumerable<decimal>>(StatusCodes.Status200OK);
+
+        app.MapGet("/api/transactions/get-transactions-by-year", GetTransactionsByYear)
+        .WithName("get transactions by year")
         .Produces<IEnumerable<decimal>>(StatusCodes.Status200OK);
 
         // Use IEnumerable<string> directly from the request body
@@ -34,6 +38,12 @@ public static class TransactionsEndpoints
     private static async Task<IResult> GetTransactionsInCurrentYear(ITransactionsRepository<ChaseTransactionsDTO> transactionsRepository)
     {
         var transactions = await transactionsRepository.GetTransactionsInCurrentYear(["CARDMEMBER SERV  WEB PYMT", "DISCOVER         E-PAYMENT", "Payment to Chase card "]);
+        return Results.Ok(transactions);
+    }
+
+    private static async Task<IResult> GetTransactionsByYear(ITransactionsRepository<ChaseTransactionsDTO> transactionsRepository, [FromQuery] int year)
+    {
+        var transactions = await transactionsRepository.GetTransactionsByYear(["CARDMEMBER SERV  WEB PYMT", "DISCOVER         E-PAYMENT", "Payment to Chase card "], year);
         return Results.Ok(transactions);
     }
 
